@@ -8,9 +8,9 @@ import { useRouter } from 'next/router'
 
 const Dashboard = () => {
 
-  const { user } = useStateContext()  
+  const { user } = useStateContext();
 
-  const router = useRouter()
+  const router = useRouter();
 
 
   useEffect(() => {

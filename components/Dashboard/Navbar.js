@@ -3,6 +3,7 @@ import styled from 'styled-components';
 import Link from 'next/link'
 import { logOut } from '@/backend/Auth';
 import { useRouter } from 'next/router';
+
 import { useStateContext } from '@/context/StateContext';
 import Home from '@/components/Dashboard/Home'
 

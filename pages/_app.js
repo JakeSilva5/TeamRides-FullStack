@@ -1,27 +1,26 @@
 import Head from 'next/head' //use instead of head
+import { useRouter } from 'next/router'
 import { StateContext } from "@/context/StateContext"
 import { createGlobalStyle } from 'styled-components'
 import GlobalStyle from '@/styles/globalStyles'
+import Navbar from '@/components/Dashboard/Navbar'
 
 export default function App({ Component, pageProps }) {
+  const router = useRouter();
+  const hideNavbarRoutes = ['/auth/login', '/auth/signup'];
   return (
     <>
-        <Head>
-          <title>MVP Starter</title>
-          <meta name='description' content='Put a description here about your app'/>
-          <meta name='robots' content='index, follow'/>
-          <link rel="apple-touch-icon" sizes="180x180" href="/favicon_package/apple-touch-icon.png"/>
-          <link rel="icon" type="image/png" sizes="32x32" href="/favicon_package/favicon-32x32.png"/>
-          <link rel="icon" type="image/png" sizes="16x16" href="/favicon_package/favicon-16x16.png"/>
-          <link rel="manifest" href="/favicon_package/site.webmanifest"/>
-          <meta name="msapplication-TileColor" content="#da532c"/>
-          <meta name="theme-color" content="#ffffff"/>
-        </Head>
+      <Head>
+        <title>TeamRides</title>
+        <meta name='description' content='Carpooling made easy for clubs'/>
+        <meta name='robots' content='index, follow'/>
+      </Head>
 
-
-        <GlobalStyle />
+      <GlobalStyle />
 
       <StateContext>
+        {!hideNavbarRoutes.includes(router.pathname) && <Navbar />}
+        
         <Component {...pageProps} />
       </StateContext>
     </>
