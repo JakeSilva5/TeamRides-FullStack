@@ -9,7 +9,7 @@ const Footer = () => {
           © {new Date().getFullYear()} CMPSC 263
         </LeftContainer>
         <CenterContainer>
-          <Link href="#">Privacy my Policy</Link> | <Link href="#">Terms of Service</Link>
+          <Link href="#">Privacy Policy</Link> | <Link href="#">Terms of Service</Link>
         </CenterContainer>
         <RightContainer>
           <SocialIcon href="#" aria-label="Facebook">FB</SocialIcon>
