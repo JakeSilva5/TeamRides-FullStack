@@ -213,11 +213,10 @@ const CarBox = styled.div`
 `;
 
 
-/* 🔹 Styled Components */
 const Title = styled.h1`
  font-size: 2.5rem;
  font-weight: bold;
- margin-bottom: 20px; /* Adds spacing below the title */
+ margin-bottom: 20px;
 `;
 
 
