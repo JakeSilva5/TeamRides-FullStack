@@ -1,16 +1,14 @@
 import React from 'react';
 import styled from 'styled-components';
 import Link from 'next/link'
-import { logOut } from '@/backend/Auth';
 import { useRouter } from 'next/router';
-
 import { useStateContext } from '@/context/StateContext';
 import Home from '@/components/Dashboard/Home'
 
 const Navbar = () => {
   const { user, setUser } = useStateContext();
   const router = useRouter();
-
+  
   return (
     <Nav>
       <LeftSection>
@@ -29,15 +27,14 @@ const Navbar = () => {
             <Button onClick={() => router.push('/auth/signup')}>Sign Up</Button>
             <Button onClick={() => router.push('/auth/login')}>Login</Button>
           </>
-        ) : (
-          <LogoutButton onClick={() => { setUser(null); router.push('/'); }}>
-            Logout
-          </LogoutButton>
-        )}
+        ) : null}
       </RightSection>
     </Nav>
   );
 };
+
+export default Navbar;
+
 
 const Nav = styled.nav`
   background: #0A1C2E;
@@ -66,8 +63,8 @@ const CenterSection = styled.div`
   display: flex;
   align-items: center;
   justify-content: center;
-  flex: 1; 
-  gap: 40px; 
+  flex: 1;
+  gap: 40px;
 `;
 
 const Logo = styled.div`
@@ -76,7 +73,7 @@ const Logo = styled.div`
   cursor: pointer;
 `;
 
-const NavLink = styled.a`
+const NavLink = styled(Link)`
   font-size: 1rem;
   color: white;
   text-decoration: none;
@@ -100,13 +97,3 @@ const Button = styled.button`
     background: #3BA6D2;
   }
 `;
-
-const LogoutButton = styled(Button)`
-  background: red;
-
-  &:hover {
-    background: darkred;
-  }
-`;
-
-export default Navbar;

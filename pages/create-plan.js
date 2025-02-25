@@ -17,7 +17,8 @@ const CreatePlan = () => {
   const [carCapacity, setCarCapacity] = useState("");
   const [carName, setCarName] = useState("");
   const [passengerName, setPassengerName] = useState("");
-
+  const [passengerAddress, setPassengerAddress] = useState("");
+  
   const addDriver = () => {
     if (!driverName || !carCapacity) return;
     setDrivers([
@@ -30,9 +31,13 @@ const CreatePlan = () => {
   };
 
   const addPassenger = () => {
-    if (!passengerName) return;
-    setUnassignedPassengers([...unassignedPassengers, { id: `passenger-${unassignedPassengers.length}`, name: passengerName }]);
+    if (!passengerName || !passengerAddress) return;
+    setUnassignedPassengers([
+      ...unassignedPassengers,
+      { id: `passenger-${unassignedPassengers.length}`, name: passengerName, address: passengerAddress },
+    ]);
     setPassengerName("");
+    setPassengerAddress("");
   };
 
   const removeDriver = (index) => {
@@ -131,6 +136,7 @@ const CreatePlan = () => {
       <h2>Add Passenger</h2>
       <Section>
         <Input type="text" placeholder="Passenger Name" value={passengerName} onChange={(e) => setPassengerName(e.target.value)} />
+        <Input type="text" placeholder="Passenger Address" value={passengerAddress} onChange={(e) => setPassengerAddress(e.target.value)} />
         <Button onClick={addPassenger}>Add Passenger</Button>
       </Section>
 

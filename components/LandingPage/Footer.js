@@ -5,49 +5,53 @@ const Footer = () => {
   return (
     <FooterSection>
       <FooterContainer>
-        <LeftContainer>
-          © {new Date().getFullYear()} CMPSC 263
-        </LeftContainer>
-        <CenterContainer>
-          <Link href="#">Privacy Policy</Link> | <Link href="#">Terms of Service</Link>
-        </CenterContainer>
-        <RightContainer>
-          <SocialIcon href="#" aria-label="Facebook">FB</SocialIcon>
-          <SocialIcon href="#" aria-label="Twitter">TW</SocialIcon>
-          <SocialIcon href="#" aria-label="Instagram">IG</SocialIcon>
-        </RightContainer>
+        <Text>
+          Developed by <Bold>Jake Silva</Bold> | CMPSC 263 Project
+        </Text>
+        <Text>© {new Date().getFullYear()} CMPSC 263</Text>
+        <Text>
+          <FooterLink href="#">Privacy Policy</FooterLink> |{' '}
+          <FooterLink href="#">Terms of Service</FooterLink>
+        </Text>
       </FooterContainer>
     </FooterSection>
   );
 };
 
-const FooterSection = styled.footer`
+export default Footer;
 
+const FooterSection = styled.footer`
+  background: #0A1C2E;
+  color: white;
+  text-align: center;
+  padding: 15px 0;
+  position: relative;
+  width: 100%;
 `;
 
 const FooterContainer = styled.div`
-
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
 `;
 
-const LeftContainer = styled.div``;
-
-const CenterContainer = styled.div``;
-
-const RightContainer = styled.div`
-
+const Text = styled.p`
+  font-size: 14px;
+  color: #ccc;
+  margin: 5px 0;
 `;
 
-const Link = styled.a`
-
+const Bold = styled.span`
+  font-weight: bold;
+  color: white;
 `;
 
-const SocialIcon = styled.a`
-  color: #fff;
+const FooterLink = styled.a`
+  color: #4CC9F0;
   text-decoration: none;
-  font-size: 1.5rem;
+  font-weight: bold;
   &:hover {
-    color: #007bff;
+    text-decoration: underline;
   }
 `;
-
-export default Footer;

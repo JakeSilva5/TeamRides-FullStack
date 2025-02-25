@@ -13,7 +13,6 @@ const About = () => {
         TeamRides simplifies carpooling for club leaders by automatically organizing carpools based on locations, availability, and team needs. No more spreadsheets or manual assignments—TeamRides automates the entire process.
       </Description>
 
-      {/* Features Section */}
       <FeatureSection>
         <FeatureCard>
           <Emoji>🚗</Emoji>
@@ -40,7 +39,6 @@ const About = () => {
         </FeatureCard>
       </FeatureSection>
 
-      {/* How It Works Section */}
       <HowItWorks>
         <h2>How It Works</h2>
         <StepList>
@@ -70,15 +68,8 @@ const About = () => {
         </StepList>
       </HowItWorks>
 
-      {/* CTA Section */}
       <CTAButton onClick={() => router.push("/create-plan")}>Get Started</CTAButton>
 
-      {/* Developed By Section */}
-      <DevelopedBy>
-        Developed by <strong>Jake Silva</strong> | CMPSC 263 Project
-      </DevelopedBy>
-
-      {/* Footer */}
       <Footer />
     </Container>
   );
@@ -86,7 +77,6 @@ const About = () => {
 
 export default About;
 
-/* 🔹 Styled Components */
 const Container = styled.div`
   width: 80%;
   margin: auto;
@@ -110,7 +100,6 @@ const Description = styled.p`
   line-height: 1.5;
 `;
 
-/* Features Section */
 const FeatureSection = styled.div`
   display: flex;
   justify-content: center;
@@ -151,7 +140,6 @@ const Emoji = styled.span`
   margin-bottom: 10px;
 `;
 
-/* How It Works Section */
 const HowItWorks = styled.div`
   margin: 50px auto;
   max-width: 800px;
@@ -180,16 +168,17 @@ const Step = styled.div`
 `;
 
 const StepNumber = styled.div`
-  font-size: 1.8rem;
+  font-size: 1.5rem;
   font-weight: bold;
   background: #4CC9F0;
   color: white;
-  width: 50px;
-  height: 50px;
+  width: 50px; /* Fixed width */
+  height: 50px; /* Fixed height */
   border-radius: 50%;
   display: flex;
   align-items: center;
   justify-content: center;
+  flex-shrink: 0; /* Prevent shrinking */
 `;
 
 const StepContent = styled.div`
@@ -206,7 +195,6 @@ const StepContent = styled.div`
   }
 `;
 
-/* CTA Button */
 const CTAButton = styled.button`
   background: #4CC9F0;
   color: white;
@@ -217,14 +205,14 @@ const CTAButton = styled.button`
   cursor: pointer;
   transition: background 0.3s ease;
   border: none;
-  margin-top: 30px;
+  margin-top: 5px;
+  margin-bottom: 40px;
 
   &:hover {
     background: #3BA6D2;
   }
 `;
 
-/* Developed By Section */
 const DevelopedBy = styled.p`
   margin-top: 50px;
   font-size: 1rem;

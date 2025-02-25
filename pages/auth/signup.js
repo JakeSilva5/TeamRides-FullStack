@@ -1,96 +1,158 @@
-import React, { useState } from 'react'
-import styled from 'styled-components'
-import { useRouter } from 'next/router'
-import { useStateContext } from '@/context/StateContext'
-import { isEmailInUse, register} from '@/backend/Auth'
-import Link from 'next/link'
-import Navbar from '@/components/Dashboard/Navbar'
+import React, { useState } from 'react';
+import styled from 'styled-components';
+import { useRouter } from 'next/router';
+import { useStateContext } from '@/context/StateContext';
+import { isEmailInUse, register } from '@/backend/Auth';
+import Link from 'next/link';
+import Navbar from '@/components/Dashboard/Navbar';
+
 const Signup = () => {
+  const { setUser } = useStateContext();
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
+  const [error, setError] = useState('');
 
-  const { user, setUser } = useStateContext()
-  const [ email, setEmail ] = useState('')
-  const [ password, setPassword ] = useState('')
+  const router = useRouter();
 
-  const router = useRouter()
-
-  async function validateEmail(){
+  async function validateEmail() {
     const emailRegex = /^[\w.%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}$/;
-    if(emailRegex.test(email) == false ){
-        return false;
+    if (!emailRegex.test(email)) {
+      setError('Invalid email format.');
+      return false;
     }
-    console.log('so far so good...')
-    const emailResponse = await isEmailInUse(email)
-    console.log('email response', emailResponse)
-    if(emailResponse.length == 0 ){
-        return false;
+    
+    console.log('Checking email...');
+    const emailExists = await isEmailInUse(email);
+    if (emailExists) {
+      setError('Email is already in use.');
+      return false;
     }
 
     return true;
-}
+  }
 
-  async function handleSignup(){
-    const isValidEmail = await validateEmail()
-    // console.log('isValidEmail', isValidEmail)
-    // if(!isValidEmail){ return; }
-    
-    try{
-        await register(email, password, setUser)
-        router.push('/dashboard')
-    }catch(err){
-        console.log('Error Signing Up', err)
+  async function handleSignup() {
+    setError('');
+    const isValidEmail = await validateEmail();
+    if (!isValidEmail) return;
+
+    try {
+      await register(email, password, setUser);
+      router.push('/');
+    } catch (err) {
+      console.log('Error Signing Up', err);
+      setError(err.message);
     }
   }
 
-
   return (
     <>
-    <Navbar/>
-    <Section>
-        <Header>Signup</Header>
-        <InputTitle>Email</InputTitle>
-        <Input type="email" value={email} onChange={(e) => setEmail(e.target.value)}/>
-        <InputTitle>Password</InputTitle>
-        <Input type="password" value={password} onChange={(e) => setPassword(e.target.value)}/>
+      <Navbar />
+      <Container>
+        <FormWrapper>
+          <Header>Sign up</Header>
+          {error && <ErrorMessage>{error}</ErrorMessage>}
 
-        <UserAgreementText>By signing in, you automatically agree to our <UserAgreementSpan href='/legal/terms-of-use' rel="noopener noreferrer" target="_blank"> Terms of Use</UserAgreementSpan> and <UserAgreementSpan href='/legal/privacy-policy' rel="noopener noreferrer" target="_blank">Privacy Policy.</UserAgreementSpan></UserAgreementText>
+          <InputTitle>Email</InputTitle>
+          <Input type="email" value={email} onChange={(e) => setEmail(e.target.value)} />
 
-        <MainButton onClick={handleSignup}>Signup</MainButton>
+          <InputTitle>Password</InputTitle>
+          <Input type="password" value={password} onChange={(e) => setPassword(e.target.value)} />
 
-    </Section>
+          <UserAgreementText>
+            By signing up, you agree to our{' '}
+            <UserAgreementSpan href="/legal/terms-of-use" target="_blank">Terms of Use</UserAgreementSpan> and{' '}
+            <UserAgreementSpan href="/legal/privacy-policy" target="_blank">Privacy Policy</UserAgreementSpan>.
+          </UserAgreementText>
+
+          <MainButton onClick={handleSignup}>Signup</MainButton>
+        </FormWrapper>
+      </Container>
     </>
-  )
-}
+  );
+};
 
-const Section = styled.section`
+export default Signup;
+
+const Container = styled.div`
   display: flex;
+  justify-content: center;
+  align-items: center;
+  height: 100vh;
+  background: #071A2E;
+`;
+
+const FormWrapper = styled.div`
+  background: #0A1C2E;
+  padding: 40px;
+  border-radius: 12px;
+  box-shadow: 0px 6px 15px rgba(0, 0, 0, 0.4);
+  width: 400px;
+  text-align: center;
+  border: 3px solid #4CC9F0; /* Blue border */
 `;
 
 const Header = styled.h1`
-  font-size: 24px; /* Adjusted for better scalability */
+  font-size: 28px;
+  font-weight: bold;
+  color: white;
+  margin-bottom: 25px;
 `;
 
 const Input = styled.input`
+  width: 100%;
+  padding: 12px;
+  margin-bottom: 15px;
+  border-radius: 6px;
+  border: 2px solid #4CC9F0;
+  background: #152A41;
+  color: white;
   font-size: 16px;
-
 `;
 
-const InputTitle = styled.label` /* Changed to label for semantics */
-  font-size: 14px;
+const InputTitle = styled.label`
+  font-size: 16px;
+  color: #ccc;
+  display: block;
+  text-align: left;
+  margin-bottom: 6px;
 `;
 
 const MainButton = styled.button`
-  font-size: 16px;
+  width: 100%;
+  background: #4CC9F0;
+  color: white;
+  border: none;
+  padding: 14px;
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 18px;
+  font-weight: bold;
+  margin-top: 15px;
+  transition: background 0.3s;
 
+  &:hover {
+    background: #3BA6D2;
+  }
 `;
 
 const UserAgreementText = styled.p`
-  font-size: 12px;
+  font-size: 13px;
+  color: #ccc;
+  margin-top: 12px;
 `;
 
-const UserAgreementSpan = styled(Link)` 
-  color: #007bff;
-
+const UserAgreementSpan = styled(Link)`
+  color: #4CC9F0;
+  cursor: pointer;
+  &:hover {
+    text-decoration: underline;
+  }
 `;
 
-
-export default Signup
+const ErrorMessage = styled.p`
+  color: red;
+  font-size: 15px;
+  font-weight: bold;
+  margin-bottom: 15px;
+`;
