@@ -2,6 +2,7 @@ import React from 'react';
 import styled from 'styled-components';
 import Link from 'next/link'
 import { useRouter } from 'next/router';
+import { logout } from '@/backend/Auth';
 import { useStateContext } from '@/context/StateContext';
 import Home from '@/components/Dashboard/Home'
 
@@ -9,6 +10,16 @@ const Navbar = () => {
   const { user, setUser } = useStateContext();
   const router = useRouter();
   
+  const handleLogout = async () => {
+    try {
+      await logout(setUser);
+      router.push('/');
+    } catch (error) {
+      console.error('Logout Error:', error);
+    }
+  };
+
+
   return (
     <Nav>
       <LeftSection>
@@ -22,12 +33,14 @@ const Navbar = () => {
       </CenterSection>
 
       <RightSection>
-        {!user ? (
+      {!user ? (
           <>
             <Button onClick={() => router.push('/auth/signup')}>Sign Up</Button>
             <Button onClick={() => router.push('/auth/login')}>Login</Button>
           </>
-        ) : null}
+        ) : (
+          <LogoutButton onClick={handleLogout}>Logout</LogoutButton>
+        )}
       </RightSection>
     </Nav>
   );
@@ -95,5 +108,19 @@ const Button = styled.button`
 
   &:hover {
     background: #3BA6D2;
+  }
+`;
+
+const LogoutButton = styled.button`
+  background: red;
+  color: white;
+  border: none;
+  padding: 8px 15px;
+  border-radius: 5px;
+  cursor: pointer;
+  transition: background 0.3s ease;
+
+  &:hover {
+    background: darkred;
   }
 `;
