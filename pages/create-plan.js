@@ -2,23 +2,43 @@ import React, { useState } from "react";
 import styled from "styled-components";
 import { DragDropContext, Droppable, Draggable } from "react-beautiful-dnd";
 import { useRouter } from "next/router";
+import { validateAddress } from "@/backend/Geocode";
 
 const CreatePlan = () => {
   const router = useRouter();
+  
   const [eventName, setEventName] = useState("");
   const [date, setDate] = useState("");
   const [time, setTime] = useState("");
   const [destination, setDestination] = useState("");
+  const [destinationCoords, setDestinationCoords] = useState(null);
+  const [isDestinationValid, setIsDestinationValid] = useState(null);
+
+  const handleDestinationChange = async (e) => {
+    const address = e.target.value;
+    setDestination(address);
+
+    if (address.trim() !== "") {
+      const result = await validateAddress(address);
+      setIsDestinationValid(result.valid);
+      if (result.valid) {
+        setDestinationCoords({ lat: result.lat, lng: result.lng });
+      }
+    }
+  };
 
   const [drivers, setDrivers] = useState([]);
   const [unassignedPassengers, setUnassignedPassengers] = useState([]);
-
+  
   const [driverName, setDriverName] = useState("");
   const [carCapacity, setCarCapacity] = useState("");
   const [carName, setCarName] = useState("");
+  
   const [passengerName, setPassengerName] = useState("");
   const [passengerAddress, setPassengerAddress] = useState("");
-  
+  const [passengerCoords, setPassengerCoords] = useState(null);
+  const [isPassengerAddressValid, setIsPassengerAddressValid] = useState(null);
+
   const addDriver = () => {
     if (!driverName || !carCapacity) return;
     setDrivers([
@@ -30,28 +50,37 @@ const CreatePlan = () => {
     setCarName("");
   };
 
-  const addPassenger = () => {
+  const addPassenger = async () => {
     if (!passengerName || !passengerAddress) return;
+  
+    console.log("Checking address:", passengerAddress); 
+  
+    const result = await validateAddress(passengerAddress);
+    console.log("Validation Result:", result); 
+  
+    if (!result.valid) {
+      setIsPassengerAddressValid(false);
+      return;
+    }
+  
     setUnassignedPassengers([
       ...unassignedPassengers,
-      { id: `passenger-${unassignedPassengers.length}`, name: passengerName, address: passengerAddress },
+      { id: `passenger-${unassignedPassengers.length}`, name: passengerName, address: passengerAddress, coords: { lat: result.lat, lng: result.lng } }
     ]);
+  
     setPassengerName("");
     setPassengerAddress("");
+    setIsPassengerAddressValid(true); 
   };
+  
 
-  const removeDriver = (index) => {
-    setDrivers(drivers.filter((_, i) => i !== index));
-  };
+  
+  const removeDriver = (index) => setDrivers(drivers.filter((_, i) => i !== index));
+  const removePassenger = (index) => setUnassignedPassengers(unassignedPassengers.filter((_, i) => i !== index));
 
-  const removePassenger = (index) => {
-    setUnassignedPassengers(unassignedPassengers.filter((_, i) => i !== index));
-  };
-
-  const canAddToCar = (driver, passengers) => {
-    return driver.passengers.length + passengers.length <= driver.capacity;
-  };
-
+  
+  const canAddToCar = (driver, passengers) => driver.passengers.length + passengers.length <= driver.capacity;
+  
   const onDragEnd = (result) => {
     const { destination, source, draggableId } = result;
     if (!destination) return;
@@ -61,50 +90,24 @@ const CreatePlan = () => {
     const finish = destination.droppableId === "unassigned" ? unassignedPassengers : drivers.find(driver => driver.id === destination.droppableId).passengers;
 
     const movedPassenger = start.find(passenger => passenger.id === draggableId);
-
     if (destination.droppableId !== "unassigned") {
       const targetDriver = drivers.find(driver => driver.id === destination.droppableId);
       if (!canAddToCar(targetDriver, [movedPassenger])) return;
     }
 
-    if (source.droppableId === destination.droppableId) {
-      const newPassengers = Array.from(start);
-      newPassengers.splice(source.index, 1);
-      newPassengers.splice(destination.index, 0, movedPassenger);
+    const startPassengers = [...start];
+    startPassengers.splice(source.index, 1);
+    const finishPassengers = [...finish];
+    finishPassengers.splice(destination.index, 0, movedPassenger);
 
-      if (source.droppableId === "unassigned") {
-        setUnassignedPassengers(newPassengers);
-      } else {
-        setDrivers(drivers.map(driver =>
-          driver.id === source.droppableId ? { ...driver, passengers: newPassengers } : driver
-        ));
-      }
-    } else {
-      const startPassengers = Array.from(start);
-      startPassengers.splice(source.index, 1);
-      const finishPassengers = Array.from(finish);
-      finishPassengers.splice(destination.index, 0, movedPassenger);
+    if (source.droppableId === "unassigned") setUnassignedPassengers(startPassengers);
+    else setDrivers(drivers.map(driver => driver.id === source.droppableId ? { ...driver, passengers: startPassengers } : driver));
 
-      if (source.droppableId === "unassigned") {
-        setUnassignedPassengers(startPassengers);
-      } else {
-        setDrivers(drivers.map(driver =>
-          driver.id === source.droppableId ? { ...driver, passengers: startPassengers } : driver
-        ));
-      }
-
-      if (destination.droppableId === "unassigned") {
-        setUnassignedPassengers(finishPassengers);
-      } else {
-        setDrivers(drivers.map(driver =>
-          driver.id === destination.droppableId ? { ...driver, passengers: finishPassengers } : driver
-        ));
-      }
-    }
+    if (destination.droppableId === "unassigned") setUnassignedPassengers(finishPassengers);
+    else setDrivers(drivers.map(driver => driver.id === destination.droppableId ? { ...driver, passengers: finishPassengers } : driver));
   };
-  const finalizePlan = () => {
-    router.push("/final-plan");
-  };
+
+  const finalizePlan = () => router.push("/final-plan");
 
   return (
     <Container>
@@ -121,22 +124,38 @@ const CreatePlan = () => {
         <Input type="time" value={time} onChange={(e) => setTime(e.target.value)} />
 
         <Label>Destination:</Label>
-        <Input type="text" value={destination} onChange={(e) => setDestination(e.target.value)} />
-
+        <Input type="text" value={destination} onChange={handleDestinationChange} />
+        {isDestinationValid === true && <ValidMessage>✅ Valid Address</ValidMessage>}
+        {isDestinationValid === false && <ErrorMessage>❌ Invalid Address</ErrorMessage>}
       </Section>
 
       <h2>Add Driver</h2>
       <Section>
         <Input type="text" placeholder="Driver Name" value={driverName} onChange={(e) => setDriverName(e.target.value)} />
-        <Input type="number" placeholder="Car Capacity (Passenger Spots)" value={carCapacity} onChange={(e) => setCarCapacity(e.target.value)} />
+        <Input type="number" placeholder="Car Capacity" value={carCapacity} onChange={(e) => setCarCapacity(e.target.value)} />
         <Input type="text" placeholder="Car Name (Optional)" value={carName} onChange={(e) => setCarName(e.target.value)} />
         <Button onClick={addDriver}>Add Driver</Button>
       </Section>
 
       <h2>Add Passenger</h2>
       <Section>
-        <Input type="text" placeholder="Passenger Name" value={passengerName} onChange={(e) => setPassengerName(e.target.value)} />
-        <Input type="text" placeholder="Passenger Address" value={passengerAddress} onChange={(e) => setPassengerAddress(e.target.value)} />
+        <Input 
+          type="text" 
+          placeholder="Passenger Name" 
+          value={passengerName} 
+          onChange={(e) => setPassengerName(e.target.value)} 
+        />
+        
+        <Input 
+          type="text" 
+          placeholder="Passenger Address" 
+          value={passengerAddress} 
+          onChange={(e) => setPassengerAddress(e.target.value)} 
+        />
+
+        {isPassengerAddressValid === true && <ValidMessage>✅ Valid Address</ValidMessage>}
+        {isPassengerAddressValid === false && <ErrorMessage>❌ Invalid Address</ErrorMessage>}  
+
         <Button onClick={addPassenger}>Add Passenger</Button>
       </Section>
 
@@ -188,6 +207,9 @@ const CreatePlan = () => {
 };
 
 export default CreatePlan;
+
+const ValidMessage = styled.p`color: green;`;
+const ErrorMessage = styled.p`color: red;`;
 
 const DragDropSection = styled.div`
   display: flex;
