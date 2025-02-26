@@ -6,7 +6,7 @@ export async function validateAddress(address) {
       const response = await fetch(url);
       const data = await response.json();
   
-      console.log("API Response:", data); // 🔍 Debugging log
+      console.log("API Response:", data);
   
       if (data.status === "OK") {
         const { lat, lng } = data.results[0].geometry.location;
