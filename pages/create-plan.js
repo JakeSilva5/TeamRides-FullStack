@@ -3,10 +3,15 @@ import styled from "styled-components";
 import { DragDropContext, Droppable, Draggable } from "react-beautiful-dnd";
 import { useRouter } from "next/router";
 import { validateAddress } from "@/backend/Geocode";
+import { savePlan } from "@/backend/Database";
+import { doc, getDoc, setDoc } from "firebase/firestore";
+import { db } from "@/backend/Firebase"; // Ensure Firestore is imported
+import { useEffect } from "react";
 
 const CreatePlan = () => {
   const router = useRouter();
-  
+  const { id } = router.query;
+
   const [eventName, setEventName] = useState("");
   const [date, setDate] = useState("");
   const [time, setTime] = useState("");
@@ -63,15 +68,79 @@ const CreatePlan = () => {
       return;
     }
   
+    const totalPassengers = unassignedPassengers.length + drivers.reduce((sum, driver) => sum + driver.passengers.length, 0);
+    const newPassengerId = `passenger-${totalPassengers}`; // 🆕 Unique ID
+  
     setUnassignedPassengers([
       ...unassignedPassengers,
-      { id: `passenger-${unassignedPassengers.length}`, name: passengerName, address: passengerAddress, coords: { lat: result.lat, lng: result.lng } }
+      { id: newPassengerId, name: passengerName, address: passengerAddress, coords: { lat: result.lat, lng: result.lng } }
     ]);
   
     setPassengerName("");
     setPassengerAddress("");
     setIsPassengerAddressValid(true); 
   };
+  
+
+  const finalizePlan = async () => {
+    if (!eventName || !date || !time || !destination || drivers.length === 0) {
+      alert("Please fill out all required fields before finalizing!");
+      return;
+    }
+  
+    const planData = {
+      eventName,
+      date,
+      time,
+      destination,
+      destinationCoords,
+      drivers,
+      passengers: unassignedPassengers,
+      createdAt: new Date().toISOString(),
+    };
+  
+    try {
+    if (id) {
+      // ✅ Update Existing Plan
+      console.log(`🔄 Updating existing plan: ${id}`);
+      const docRef = doc(db, "plans", id);
+      await setDoc(docRef, planData, { merge: true });
+      console.log("✅ Plan updated successfully!");
+    } else {
+      // ✅ Create New Plan
+      console.log("🆕 Creating a new plan...");
+      const planId = await savePlan(planData);
+      router.push(`/view-plan?id=${planId}`);
+    }
+    router.push("/my-plans");
+  } catch (error) {
+    console.error("❌ Error saving plan:", error);
+  }
+};
+  
+  useEffect(() => {
+    if (id) {
+      const fetchPlan = async () => {
+        const docRef = doc(db, "plans", id);
+        const docSnap = await getDoc(docRef);
+  
+        if (docSnap.exists()) {
+          const planData = docSnap.data();
+          setEventName(planData.eventName);
+          setDate(planData.date);
+          setTime(planData.time);
+          setDestination(planData.destination);
+          setDestinationCoords(planData.destinationCoords);
+          setDrivers(planData.drivers);
+          setUnassignedPassengers(planData.passengers || []);
+        } else {
+          console.error("Plan not found!");
+        }
+      };
+  
+      fetchPlan();
+    }
+  }, [id]);
   
 
   
@@ -106,8 +175,6 @@ const CreatePlan = () => {
     if (destination.droppableId === "unassigned") setUnassignedPassengers(finishPassengers);
     else setDrivers(drivers.map(driver => driver.id === destination.droppableId ? { ...driver, passengers: finishPassengers } : driver));
   };
-
-  const finalizePlan = () => router.push("/final-plan");
 
   return (
     <Container>

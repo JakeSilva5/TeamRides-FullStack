@@ -1,73 +1,66 @@
 import React from "react";
 import styled from "styled-components";
 import { useRouter } from "next/router";
+import { useEffect, useState } from "react";
+import { doc, getDoc } from "firebase/firestore";
+import { db } from "@/backend/Firebase";
+
 
 const ViewPlan = () => {
   const router = useRouter();
+  const { id } = router.query;
+  const [plan, setPlan] = useState(null);
 
-  // Placeholder Data (Replace with API data later)
-  const eventDetails = {
-    name: "Team Trip to Nationals",
-    date: "2025-04-15",
-    time: "08:00 AM",
-    destination: "National Sports Complex",
-  };
+  useEffect(() => {
+    if (id) {
+      const fetchPlan = async () => {
+        const docRef = doc(db, "plans", id);
+        const docSnap = await getDoc(docRef);
 
-  const drivers = [
-    { id: "driver-1", name: "Jake", carName: "Jaguar", passengers: ["Mitch", "Rick", "Will", "Tommy"] },
-    { id: "driver-2", name: "Olivia", carName: "Lil Babe", passengers: ["Amy", "Sophia", "Emma", "Emily"] },
-  ];
+        if (docSnap.exists()) {
+          setPlan(docSnap.data());
+        } else {
+          console.error("No such plan found!");
+        }
+      };
+      fetchPlan();
+    }
+  }, [id]);
 
-  const unassignedPassengers = ["Darby", "Tahir"];
+  if (!plan) return <p>Loading...</p>;
 
   return (
-    <Container>
-      <Title>View Plan</Title>
+    <div>
+      <h1>{plan.eventName}</h1>
+      <p><strong>Date:</strong> {plan.date}</p>
+      <p><strong>Time:</strong> {plan.time}</p>
+      <p><strong>Destination:</strong> {plan.destination}</p>
 
-      <EventDetails>
-        <h2>{eventDetails.name}</h2>
-        <p><strong>Date:</strong> {eventDetails.date}</p>
-        <p><strong>Time:</strong> {eventDetails.time}</p>
-        <p><strong>Destination:</strong> {eventDetails.destination}</p>
-      </EventDetails>
-
-      <Section>
-        <h2>Driver Assignments</h2>
-        {drivers.map((driver) => (
-          <CarBox key={driver.id}>
-            <h3>{driver.name} {driver.carName ? `(${driver.carName})` : ""}</h3>
-            <PassengerList>
-              {driver.passengers.length > 0 ? (
-                driver.passengers.map((passenger, index) => (
-                  <PassengerItem key={index}>{passenger}</PassengerItem>
-                ))
-              ) : (
-                <EmptyMessage>No passengers assigned.</EmptyMessage>
-              )}
-            </PassengerList>
-          </CarBox>
-        ))}
-      </Section>
-
-      {unassignedPassengers.length > 0 && (
-        <Section>
-          <h2>Unassigned Passengers</h2>
-          <PassengerList>
-            {unassignedPassengers.map((passenger, index) => (
-              <PassengerItem key={index}>{passenger}</PassengerItem>
+      <h2>Drivers</h2>
+      {plan.drivers.map((driver, index) => (
+        <div key={index}>
+          <p><strong>{driver.name}</strong> ({driver.carName || "No Car Name"})</p>
+          <p>Capacity: {driver.capacity}</p>
+          <ul>
+            {driver.passengers.map((passenger, idx) => (
+              <li key={idx}>{passenger.name}</li>
             ))}
-          </PassengerList>
-        </Section>
-      )}
+          </ul>
+        </div>
+      ))}
 
-      <Button onClick={() => router.push("/my-plans")}>Back to My Plans</Button>
-    </Container>
+      <h2>Unassigned Passengers</h2>
+      <ul>
+        {plan.passengers.map((passenger, index) => (
+          <li key={index}>{passenger.name}</li>
+        ))}
+      </ul>
+    </div>
   );
 };
 
 export default ViewPlan;
 
-/* 🔹 Styled Components */
 const Container = styled.div`
   width: 60%;
   margin: auto;

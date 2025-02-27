@@ -1,65 +1,72 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import styled from "styled-components";
 import { useRouter } from "next/router";
+import { collection, query, where, getDocs, deleteDoc, doc } from "firebase/firestore";
+import { db, auth } from "@/backend/Firebase";
 
 const MyPlans = () => {
   const router = useRouter();
-  const [plans, setPlans] = useState([
-    { id: 1, name: "Game Day Travel", date: "2025-03-15", time: "10:00 AM", destination: "Penn State Stadium" },
-    { id: 2, name: "Away Game Trip", date: "2025-03-02", time: "8:30 AM", destination: "Ohio State Arena" },
-  ]);
-  const [sortOrder, setSortOrder] = useState("newest");
+  const [plans, setPlans] = useState([]);
+  const [loading, setLoading] = useState(true);
 
-  const toggleSortOrder = () => {
-    const sortedPlans = [...plans].sort((a, b) =>
-      sortOrder === "newest"
-        ? new Date(a.date) - new Date(b.date)
-        : new Date(b.date) - new Date(a.date)
-    );
-    setPlans(sortedPlans);
-    setSortOrder(sortOrder === "newest" ? "oldest" : "newest");
-  };
+  useEffect(() => {
+    const fetchPlans = async () => {
+      if (!auth.currentUser) {
+        console.error("User not authenticated!");
+        return;
+      }
 
-  const deletePlan = (id) => {
-    if (window.confirm("Are you sure you want to delete this plan?")) {
-      setPlans(plans.filter((plan) => plan.id !== id));
+      const userId = auth.currentUser.uid;
+      const plansRef = collection(db, "plans");
+      const q = query(plansRef, where("userId", "==", userId));
+
+      try {
+        const querySnapshot = await getDocs(q);
+        const userPlans = querySnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+        setPlans(userPlans);
+      } catch (error) {
+        console.error("Error fetching plans:", error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchPlans();
+  }, []);
+
+  const handleDelete = async (planId) => {
+    if (!window.confirm("Are you sure you want to delete this plan?")) return;
+
+    try {
+      await deleteDoc(doc(db, "plans", planId));
+      setPlans(plans.filter(plan => plan.id !== planId));
+    } catch (error) {
+      console.error("Error deleting plan:", error);
     }
   };
 
+  if (loading) return <p>Loading plans...</p>;
+
   return (
     <Container>
-      <Header>
-        <Title>My Plans</Title>
-        <SortButton onClick={toggleSortOrder}>
-          Sort by Date: {sortOrder === "newest" ? "Newest → Oldest" : "Oldest → Newest"}
-        </SortButton>
-      </Header>
-
-      <PlansGrid>
-        {plans.length > 0 ? (
-          plans.map((plan) => (
-            <PlanCard key={plan.id}>
-              <PlanTitle>{plan.name}</PlanTitle>
-              <PlanInfo>
-                <strong>Date:</strong> {plan.date}
-              </PlanInfo>
-              <PlanInfo>
-                <strong>Time:</strong> {plan.time}
-              </PlanInfo>
-              <PlanInfo>
-                <strong>Destination:</strong> {plan.destination}
-              </PlanInfo>
-              <ButtonContainer>
-                <ViewButton onClick={() => router.push(`/view-plan?id=${plan.id}`)}>🔍 View</ViewButton>
-                <EditButton onClick={() => router.push(`/create-plan?id=${plan.id}`)}>📝 Edit</EditButton>
-                <DeleteButton onClick={() => deletePlan(plan.id)}>🗑️ Delete</DeleteButton>
-              </ButtonContainer>
-            </PlanCard>
-          ))
-        ) : (
-          <NoPlansMessage>No saved plans yet.</NoPlansMessage>
-        )}
-      </PlansGrid>
+      <Title>My Plans</Title>
+      {plans.length === 0 ? (
+        <EmptyMessage>No plans found. Create one!</EmptyMessage>
+      ) : (
+        plans.map((plan) => (
+          <PlanCard key={plan.id}>
+            <h3>{plan.eventName}</h3>
+            <p><strong>Date:</strong> {plan.date}</p>
+            <p><strong>Time:</strong> {plan.time}</p>
+            <p><strong>Destination:</strong> {plan.destination}</p>
+            <ButtonContainer>
+              <ViewButton onClick={() => router.push(`/view-plan?id=${plan.id}`)}>🔍 View</ViewButton>
+              <EditButton onClick={() => router.push(`/create-plan?id=${plan.id}`)}>✏️ Edit</EditButton>
+              <DeleteButton onClick={() => handleDelete(plan.id)}>🗑 Delete</DeleteButton>
+            </ButtonContainer>
+          </PlanCard>
+        ))
+      )}
     </Container>
   );
 };
@@ -67,72 +74,30 @@ const MyPlans = () => {
 export default MyPlans;
 
 const Container = styled.div`
-  width: 80%;
+  width: 60%;
   margin: auto;
-  padding: 50px 20px;
+  padding: 20px;
   text-align: center;
-`;
-
-const Header = styled.div`
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-bottom: 20px;
 `;
 
 const Title = styled.h1`
   font-size: 2.5rem;
   font-weight: bold;
-`;
-
-const SortButton = styled.button`
-  background: #4CC9F0;
-  color: white;
-  padding: 10px 15px;
-  border-radius: 5px;
-  cursor: pointer;
-  border: none;
-  transition: background 0.3s ease;
-
-  &:hover {
-    background: #3BA6D2;
-  }
-`;
-
-const PlansGrid = styled.div`
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
-  gap: 20px;
+  margin-bottom: 20px;
 `;
 
 const PlanCard = styled.div`
   background: rgba(255, 255, 255, 0.1);
-  padding: 20px;
+  padding: 15px;
   border-radius: 10px;
+  margin-bottom: 20px;
   text-align: left;
-  box-shadow: 0px 4px 10px rgba(0, 0, 0, 0.2);
-  transition: transform 0.3s ease;
-
-  &:hover {
-    transform: translateY(-5px);
-  }
-`;
-
-const PlanTitle = styled.h2`
-  font-size: 1.5rem;
-  margin-bottom: 10px;
-`;
-
-const PlanInfo = styled.p`
-  font-size: 1rem;
-  opacity: 0.8;
-  margin: 5px 0;
 `;
 
 const ButtonContainer = styled.div`
   display: flex;
-  justify-content: space-between;
-  margin-top: 15px;
+  gap: 10px;
+  margin-top: 10px;
 `;
 
 const ViewButton = styled.button`
@@ -141,29 +106,26 @@ const ViewButton = styled.button`
   padding: 8px 12px;
   border-radius: 5px;
   cursor: pointer;
-  border: none;
-
-  &:hover {
-    background: #3BA6D2;
-  }
 `;
 
-const EditButton = styled(ViewButton)`
-  background: #FFD166;
-  &:hover {
-    background: #E6B800;
-  }
+const EditButton = styled.button`
+  background: #FDCB58;
+  color: black;
+  padding: 8px 12px;
+  border-radius: 5px;
+  cursor: pointer;
 `;
 
-const DeleteButton = styled(ViewButton)`
-  background: #EF476F;
-  &:hover {
-    background: #D43B5F;
-  }
+const DeleteButton = styled.button`
+  background: #E74C3C;
+  color: white;
+  padding: 8px 12px;
+  border-radius: 5px;
+  cursor: pointer;
 `;
 
-const NoPlansMessage = styled.p`
-  font-size: 1.2rem;
-  opacity: 0.8;
-  margin-top: 20px;
+const EmptyMessage = styled.p`
+  color: #aaa;
+  font-style: italic;
+  margin-top: 10px;
 `;
