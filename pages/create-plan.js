@@ -38,22 +38,44 @@ const CreatePlan = () => {
   const [driverName, setDriverName] = useState("");
   const [carCapacity, setCarCapacity] = useState("");
   const [carName, setCarName] = useState("");
+  const [driverAddress, setDriverAddress] = useState("");
+  const [isDriverAddressValid, setIsDriverAddressValid] = useState(null);
+
   
   const [passengerName, setPassengerName] = useState("");
   const [passengerAddress, setPassengerAddress] = useState("");
   const [passengerCoords, setPassengerCoords] = useState(null);
   const [isPassengerAddressValid, setIsPassengerAddressValid] = useState(null);
 
-  const addDriver = () => {
-    if (!driverName || !carCapacity) return;
+  const addDriver = async () => {
+    if (!driverName || !carCapacity || !driverAddress) return;
+  
+    const result = await validateAddress(driverAddress);
+    if (!result.valid) {
+      setIsDriverAddressValid(false);
+      return;
+    }
+  
     setDrivers([
       ...drivers,
-      { id: `driver-${drivers.length}`, name: driverName, capacity: Number(carCapacity), carName, passengers: [] },
+      {
+        id: `driver-${drivers.length}`,
+        name: driverName,
+        capacity: Number(carCapacity),
+        carName,
+        startAddress: driverAddress,
+        startCoords: { lat: result.lat, lng: result.lng },
+        passengers: []
+      }
     ]);
+  
     setDriverName("");
     setCarCapacity("");
     setCarName("");
+    setDriverAddress("");
+    setIsDriverAddressValid(true);
   };
+  
 
   const addPassenger = async () => {
     if (!passengerName || !passengerAddress) return;
@@ -69,7 +91,7 @@ const CreatePlan = () => {
     }
   
     const totalPassengers = unassignedPassengers.length + drivers.reduce((sum, driver) => sum + driver.passengers.length, 0);
-    const newPassengerId = `passenger-${totalPassengers}`; // 🆕 Unique ID
+    const newPassengerId = `passenger-${totalPassengers}`; 
   
     setUnassignedPassengers([
       ...unassignedPassengers,
@@ -101,13 +123,13 @@ const CreatePlan = () => {
   
     try {
     if (id) {
-      // ✅ Update Existing Plan
+      //Update Existing Plan
       console.log(`🔄 Updating existing plan: ${id}`);
       const docRef = doc(db, "plans", id);
       await setDoc(docRef, planData, { merge: true });
       console.log("✅ Plan updated successfully!");
     } else {
-      // ✅ Create New Plan
+      //Create New Plan
       console.log("🆕 Creating a new plan...");
       const planId = await savePlan(planData);
       router.push(`/view-plan?id=${planId}`);
@@ -198,11 +220,47 @@ const CreatePlan = () => {
 
       <h2>Add Driver</h2>
       <Section>
-        <Input type="text" placeholder="Driver Name" value={driverName} onChange={(e) => setDriverName(e.target.value)} />
-        <Input type="number" placeholder="Car Capacity" value={carCapacity} onChange={(e) => setCarCapacity(e.target.value)} />
-        <Input type="text" placeholder="Car Name (Optional)" value={carName} onChange={(e) => setCarName(e.target.value)} />
+        <Input 
+          type="text" 
+          placeholder="Driver Name" 
+          value={driverName} 
+          onChange={(e) => setDriverName(e.target.value)} 
+        />
+        
+        <Input 
+          type="number" 
+          placeholder="Car Capacity" 
+          value={carCapacity} 
+          onChange={(e) => setCarCapacity(e.target.value)} 
+        />
+
+        <Input 
+          type="text" 
+          placeholder="Car Name (Optional)" 
+          value={carName} 
+          onChange={(e) => setCarName(e.target.value)} 
+        />
+
+        <Input 
+          type="text" 
+          placeholder="Starting Address" 
+          value={driverAddress} 
+          onChange={async (e) => {
+            const address = e.target.value;
+            setDriverAddress(address);
+
+            if (address.trim() !== "") {
+              const result = await validateAddress(address);
+              setIsDriverAddressValid(result.valid);
+            }
+          }} 
+        />
+        {isDriverAddressValid === true && <ValidMessage>✅ Valid Address</ValidMessage>}
+        {isDriverAddressValid === false && <ErrorMessage>❌ Invalid Address</ErrorMessage>}
+
         <Button onClick={addDriver}>Add Driver</Button>
       </Section>
+
 
       <h2>Add Passenger</h2>
       <Section>

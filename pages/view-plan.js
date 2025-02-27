@@ -38,16 +38,18 @@ const ViewPlan = () => {
 
       <h2>Drivers</h2>
       {plan.drivers.map((driver, index) => (
-        <div key={index}>
-          <p><strong>{driver.name}</strong> ({driver.carName || "No Car Name"})</p>
-          <p>Capacity: {driver.capacity}</p>
-          <ul>
-            {driver.passengers.map((passenger, idx) => (
-              <li key={idx}>{passenger.name}</li>
-            ))}
-          </ul>
-        </div>
-      ))}
+      <div key={index}>
+        <p><strong>{driver.name}</strong> ({driver.carName || "No Car Name"})</p>
+        <p><strong>Starting Location:</strong> {driver.startAddress}</p>
+        <p>Capacity: {driver.capacity}</p>
+        <ul>
+          {driver.passengers.map((passenger, idx) => (
+            <li key={idx}>{passenger.name}</li>
+          ))}
+        </ul>
+      </div>
+    ))}
+
 
       <h2>Unassigned Passengers</h2>
       <ul>

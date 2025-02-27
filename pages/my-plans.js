@@ -11,28 +11,30 @@ const MyPlans = () => {
 
   useEffect(() => {
     const fetchPlans = async () => {
-      if (!auth.currentUser) {
+      const user = auth.currentUser;
+      if (!user) {
         console.error("User not authenticated!");
         return;
       }
-
-      const userId = auth.currentUser.uid;
+  
       const plansRef = collection(db, "plans");
-      const q = query(plansRef, where("userId", "==", userId));
-
+      const q = query(plansRef, where("userId", "==", user.uid)); // ✅ Ensure correct filter
+  
       try {
         const querySnapshot = await getDocs(q);
         const userPlans = querySnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
         setPlans(userPlans);
+        console.log("Fetched plans:", userPlans); // 🔍 Debugging log
       } catch (error) {
         console.error("Error fetching plans:", error);
       } finally {
         setLoading(false);
       }
     };
-
+  
     fetchPlans();
   }, []);
+  
 
   const handleDelete = async (planId) => {
     if (!window.confirm("Are you sure you want to delete this plan?")) return;
