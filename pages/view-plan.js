@@ -12,7 +12,7 @@ const mapContainerStyle = {
   boxShadow: "0px 4px 8px rgba(0, 0, 0, 0.2)",
 };
 
-const libraries = ["places"];
+const libraries = ["places"]; // defining google maps libraries
 
 const ViewPlan = () => {
   const router = useRouter();
@@ -25,27 +25,43 @@ const ViewPlan = () => {
     libraries,
   });
 
+  // fetch plan from firestore if id changes or component mounts
   useEffect(() => {
     if (id) {
-      const fetchPlan = async () => {
-        const docRef = doc(db, "plans", id);
-        const docSnap = await getDoc(docRef);
+        const fetchPlan = async () => {
+            try {
+                const docRef = doc(db, "plans", id);
+                let docSnap = await getDoc(docRef);
 
-        if (docSnap.exists()) {
-          setPlan(docSnap.data());
-        } else {
-          console.error("No such plan found!");
-        }
-      };
-      fetchPlan();
+                if (!docSnap.exists()) {
+                    console.error("Plan not found!");
+                    return;
+                }
+
+                setPlan(docSnap.data()); // update plan state with retrieved data
+
+                // refetch updated plan after 1 second bc need slight delay to ensure lastest if quickly changed
+                setTimeout(async () => {
+                    docSnap = await getDoc(docRef);
+                    setPlan(docSnap.data());
+                    console.log("🔄 Refetched Updated Plan:", docSnap.data());
+                }, 1000);
+            } catch (error) {
+                console.error("Error fetching plan:", error);
+            }
+        };
+
+        fetchPlan();
     }
-  }, [id]);
+}, [id]);
 
+  
+  // generate routes
   useEffect(() => {
     if (isLoaded && plan?.drivers?.length > 0) {
       plan.drivers.forEach((driver, index) => calculateRoute(driver, index));
     }
-  }, [isLoaded, plan]);
+  }, [isLoaded, plan]); // rerun when google maps loads or plan is updated
 
   const calculateRoute = (driver, index) => {
     if (!driver?.startCoords || !plan.destinationCoords) return;
@@ -60,7 +76,8 @@ const ViewPlan = () => {
       return;
     }
 
-    const directionsService = new window.google.maps.DirectionsService();
+    const directionsService = new window.google.maps.DirectionsService(); // create directions service instance
+    // requesting route calculation
     directionsService.route(
       {
         origin: driver.startCoords,
@@ -71,7 +88,7 @@ const ViewPlan = () => {
       },
       (result, status) => {
         if (status === "OK") {
-          setDirections((prev) => ({ ...prev, [index]: result }));
+          setDirections((prev) => ({ ...prev, [index]: result })); // storing route directions for driver
         } else {
           console.error(`Error fetching directions for driver ${index}:`, status);
         }
@@ -79,6 +96,7 @@ const ViewPlan = () => {
     );
   };
 
+  // handling error when Google Maps API fails
   if (loadError) return <p>Error loading Google Maps</p>;
   if (!isLoaded) return <p>Loading Google Maps...</p>;
   if (!plan) return <p>Loading plan...</p>;
@@ -111,7 +129,6 @@ const ViewPlan = () => {
             </PassengerList>
           </DriverDetails>
 
-          {/* adding map for each driver */}
           <MapContainer>
             <GoogleMap
               mapContainerStyle={mapContainerStyle}
@@ -202,4 +219,3 @@ const MapContainer = styled.div`
   border-radius: 10px;
   overflow: hidden;
 `;
-

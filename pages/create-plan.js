@@ -5,7 +5,7 @@ import { useRouter } from "next/router";
 import { validateAddress } from "@/backend/Geocode";
 import { savePlan } from "@/backend/Database";
 import { doc, getDoc, setDoc } from "firebase/firestore";
-import { db } from "@/backend/Firebase"; // Ensure Firestore is imported
+import { db } from "@/backend/Firebase";
 import { useEffect } from "react";
 
 const CreatePlan = () => {
@@ -47,6 +47,9 @@ const CreatePlan = () => {
   const [passengerCoords, setPassengerCoords] = useState(null);
   const [isPassengerAddressValid, setIsPassengerAddressValid] = useState(null);
 
+  const [autoAssign, setAutoAssign] = useState(true);
+  const [isOptimizing, setIsOptimizing] = useState(false);
+  
   const addDriver = async () => {
     if (!driverName || !carCapacity || !driverAddress) return;
   
@@ -102,76 +105,141 @@ const CreatePlan = () => {
     setPassengerAddress("");
     setIsPassengerAddressValid(true); 
   };
-  
+  // Calculating shortest distance, may not be the most practical but after testing it still works really well.
+  // If this app ever gets scaled in future, I probably look to use distance matrix api 
+  const calculateDistance = (coords1, coords2) => {
+    const R = 6371; // radius of earth km
+    const lat1 = coords1.lat * (Math.PI / 180);
+    const lat2 = coords2.lat * (Math.PI / 180);
+    const dLat = lat2 - lat1;
+    const dLng = (coords2.lng - coords1.lng) * (Math.PI / 180);
+    
+    const a = Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+              Math.cos(lat1) * Math.cos(lat2) *
+              Math.sin(dLng / 2) * Math.sin(dLng / 2);
+              
+    const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+    
+    return R * c; // distance in km
+};
 
-  const finalizePlan = async () => {
-    if (!eventName || !date || !time || !destination || drivers.length === 0) {
+const optimizeAssignments = () => {
+    let updatedDrivers = [...drivers]; // copying current drivers and unassigned passengers
+    let remainingPassengers = [...unassignedPassengers];
+
+    // iterate each driver to assign them passengers
+    updatedDrivers = updatedDrivers.map((driver) => {
+        if (remainingPassengers.length === 0) return driver;
+
+        const availableSlots = driver.capacity - driver.passengers.length;
+        
+        if (availableSlots > 0) {
+            // sort remaining passengers by proximity to drivers address
+            remainingPassengers.sort((a, b) => 
+                calculateDistance(driver.startCoords, a.coords) - calculateDistance(driver.startCoords, b.coords)
+            );
+            // assigning clostet passenger until car is full
+            const assigned = remainingPassengers.splice(0, availableSlots);
+            return { ...driver, passengers: [...driver.passengers, ...assigned] };
+        }
+        
+        return driver;
+    });
+    // update state
+    setDrivers(updatedDrivers);
+    setUnassignedPassengers(remainingPassengers);
+
+    return { updatedDrivers, remainingPassengers };
+};
+
+const finalizePlan = async () => {
+  if (!eventName || !date || !time || !destination || drivers.length === 0) {
       alert("Please fill out all required fields before finalizing!");
       return;
-    }
-  
-    const planData = {
+  }
+  // when automate button selected
+  if (autoAssign) {
+      setIsOptimizing(true);
+      setTimeout(async () => {
+          const { updatedDrivers, remainingPassengers } = optimizeAssignments();
+
+          await saveAndRedirect(updatedDrivers, remainingPassengers); // pass updated data
+      }, 1000); // needed slight delay for UI feedback
+  } else {
+      await saveAndRedirect(drivers, unassignedPassengers);
+  }
+};
+
+
+const saveAndRedirect = async (updatedDrivers, remainingPassengers) => {
+  const planData = {
       eventName,
       date,
       time,
       destination,
       destinationCoords,
-      drivers,
-      passengers: unassignedPassengers,
+      drivers: updatedDrivers,
+      passengers: remainingPassengers,
       createdAt: new Date().toISOString(),
-    };
-  
-    try {
-    if (id) {
-      //Update Existing Plan
-      console.log(`🔄 Updating existing plan: ${id}`);
-      const docRef = doc(db, "plans", id);
-      await setDoc(docRef, planData, { merge: true });
-      console.log("✅ Plan updated successfully!");
-    } else {
-      //Create New Plan
-      console.log("🆕 Creating a new plan...");
-      const planId = await savePlan(planData);
-      router.push(`/view-plan?id=${planId}`);
-    }
-    router.push("/my-plans");
+  };
+
+  try {
+      if (id) {
+          await setDoc(doc(db, "plans", id), planData, { merge: true }); // existing plan update
+      } else {
+          const planId = await savePlan(planData);
+          router.push(`/view-plan?id=${planId}`);
+      }
+
+      router.push("/my-plans");
   } catch (error) {
-    console.error("❌ Error saving plan:", error);
+      console.error("Error saving plan:", error);
+  } finally {
+      setIsOptimizing(false);
   }
 };
-  
-  useEffect(() => {
-    if (id) {
+
+useEffect(() => {
+  if (id) { // if plan ID exists in query
       const fetchPlan = async () => {
-        const docRef = doc(db, "plans", id);
-        const docSnap = await getDoc(docRef);
-  
-        if (docSnap.exists()) {
-          const planData = docSnap.data();
+          const docRef = doc(db, "plans", id); // reference firestore doc for current plan
+          const docSnap = await getDoc(docRef);
+
+          if (!docSnap.exists()) {
+              console.error("Plan not found!");
+              return;
+          }
+
+          const planData = docSnap.data(); // extract plan from firestore
+          
+          // create set of all passenger IDs from drivers
+          const assignedPassengerIds = new Set(
+              planData.drivers.flatMap(driver => driver.passengers.map(p => p.id))
+          );
+          // update state
           setEventName(planData.eventName);
           setDate(planData.date);
           setTime(planData.time);
           setDestination(planData.destination);
           setDestinationCoords(planData.destinationCoords);
           setDrivers(planData.drivers);
-          setUnassignedPassengers(planData.passengers || []);
-        } else {
-          console.error("Plan not found!");
-        }
+          
+          // filtering unassigned
+          setUnassignedPassengers(
+              (planData.passengers || []).filter(p => !assignedPassengerIds.has(p.id))
+          );
       };
-  
-      fetchPlan();
-    }
-  }, [id]);
-  
 
-  
+      fetchPlan(); // fetch plan but async
+  }
+}, [id]); //rerun when id changes
+
   const removeDriver = (index) => setDrivers(drivers.filter((_, i) => i !== index));
   const removePassenger = (index) => setUnassignedPassengers(unassignedPassengers.filter((_, i) => i !== index));
 
   
   const canAddToCar = (driver, passengers) => driver.passengers.length + passengers.length <= driver.capacity;
-  
+  // drag and drop logic
   const onDragEnd = (result) => {
     const { destination, source, draggableId } = result;
     if (!destination) return;
@@ -201,7 +269,16 @@ const CreatePlan = () => {
   return (
     <Container>
       <Title>Create a Plan</Title>
-
+      <CheckboxContainer>
+        <label>
+          <input
+            type="checkbox"
+            checked={autoAssign}
+            onChange={() => setAutoAssign(!autoAssign)}
+          />
+          Auto-Assign Passengers
+        </label>
+      </CheckboxContainer>
       <Section>
         <Label>Event Name:</Label>
         <Input type="text" value={eventName} onChange={(e) => setEventName(e.target.value)} />
@@ -326,7 +403,9 @@ const CreatePlan = () => {
         </DragDropSection>
       </DragDropContext>
 
-      <Button onClick={finalizePlan}>Finalize Plan</Button>
+      <Button onClick={finalizePlan} disabled={isOptimizing}>
+        {isOptimizing ? "Optimizing Assignments..." : "Finalize Plan"}
+      </Button>
     </Container>
   );
 };
@@ -398,19 +477,17 @@ const Input = styled.input`
 
 
 const Button = styled.button`
- background: #4CC9F0;
- color: white;
- padding: 10px 15px;
- border: none;
- border-radius: 5px;
- cursor: pointer;
- margin-top: 10px;
- transition: background 0.3s;
+background: ${(props) => (props.disabled ? "#ccc" : "#4CC9F0")};
+color: white;
+padding: 10px 15px;
+border: none;
+border-radius: 5px;
+cursor: ${(props) => (props.disabled ? "not-allowed" : "pointer")};
+transition: background 0.3s ease;
 
-
- &:hover {
-   background: #3BA6D2;
- }
+&:hover {
+  background: ${(props) => (props.disabled ? "#ccc" : "#3BA6D2")};
+}
 `;
 
 
@@ -459,4 +536,9 @@ const EmptyMessage = styled.p`
  color: #aaa;
  font-style: italic;
  margin-top: 10px;
+`;
+
+const CheckboxContainer = styled.div`
+  margin-bottom: 20px;
+  font-size: 1rem;
 `;
