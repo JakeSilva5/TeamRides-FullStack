@@ -10,62 +10,75 @@ export default function Home() {
       
       <Hero />
       <FeatureSection>
-        <FeatureCard>
-          <h2>Optimized Routes</h2>
-          <p>Ensure the most efficient trip paths for every vehicle.</p>
-        </FeatureCard>
-        <FeatureCard>
-          <h2>Automated Ride Planning</h2>
-          <p>Instantly organize carpools based on locations and availability.</p>
-        </FeatureCard>
-        <FeatureCard>
-          <h2>Easy Coordination</h2>
-          <p>Quickly share trip plans with teammates and drivers.</p>
-        </FeatureCard>
-      </FeatureSection>
+       <FeatureCard>
+         <Emoji>🚗</Emoji>
+         <h3>Automated Ride Planning</h3>
+         <p>Instantly assigns passengers to drivers based on capacity & location.</p>
+       </FeatureCard>
+
+
+       <FeatureCard>
+         <Emoji>📍</Emoji>
+         <h3>Optimized Routes</h3>
+         <p>Uses 3 Google API for extra functionality in optimizing plans.</p>
+       </FeatureCard>
+
+       <FeatureCard>
+         <Emoji>🔄</Emoji>
+         <h3>Live Updates</h3>
+         <p>Easily make changes without having to start over. Including a Manual Adjustment mode.</p>
+       </FeatureCard>
+
+       <FeatureCard>
+         <Emoji>📥</Emoji>
+         <h3>Drag & Drop Adjustments</h3>
+         <p>Club leaders can fine-tune assignments with an interactive interface.</p>
+       </FeatureCard>
+
+     </FeatureSection>
       <Footer />
     </>
   );
 }
 
-
-const FeatureSection = styled.section`
+const FeatureSection = styled.div`
   display: flex;
   justify-content: center;
-  align-items: center;
   flex-wrap: wrap;
-  max-width: 1000px;
-  padding: 60px 20px;
-  margin: 0 auto;
-  gap: 30px;
-
+  gap: 30px; 
+  margin-top: 80px; 
+  margin-bottom: 80px; 
+  padding: 0 10%; 
 `;
 
 const FeatureCard = styled.div`
+  flex: 1 1 280px; 
+  max-width: 250px; 
   background: rgba(255, 255, 255, 0.1);
-  padding: 30px;
-  border-radius: 15px;
-  width: 300px;
-  min-height: 180px;
-  display: flex;
-  flex-direction: column;
-  justify-content: space-between;
-  align-items: center;
+  padding: 25px;
+  border-radius: 12px;
   text-align: center;
-  box-shadow: 0px 4px 12px rgba(0, 0, 0, 0.2);
+  box-shadow: 0px 4px 10px rgba(0, 0, 0, 0.2);
   transition: transform 0.3s ease, background 0.3s ease;
 
   &:hover {
-    transform: translateY(-8px);
+    transform: translateY(-5px);
     background: rgba(255, 255, 255, 0.15);
   }
 
-  h2 {
-    margin-bottom: 10px;
+  h3 {
+    margin-bottom: 12px;
+    font-size: 1.3rem;
   }
 
   p {
-    flex-grow: 1;
+    font-size: 1rem;
+    opacity: 0.85;
   }
 `;
 
+const Emoji = styled.span`
+ font-size: 1.5rem;
+ display: block;
+ margin-bottom: 10px;
+`;

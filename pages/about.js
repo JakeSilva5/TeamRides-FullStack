@@ -10,34 +10,8 @@ const About = () => {
     <Container>
       <Title>About TeamRides</Title>
       <Description>
-        TeamRides simplifies carpooling for club leaders by automatically organizing carpools based on locations, availability, and team needs. No more spreadsheets or manual assignments—TeamRides automates the entire process.
+        TeamRides simplifies carpooling for club leaders by automatically organizing carpools based on locations, availability, and team needs. The app also aids in route visualization to make plans. Throw out the spreadsheets —TeamRides automates the entire process.
       </Description>
-
-      <FeatureSection>
-        <FeatureCard>
-          <Emoji>🚗</Emoji>
-          <h3>Automated Ride Planning</h3>
-          <p>Instantly assigns passengers to drivers based on capacity & location.</p>
-        </FeatureCard>
-
-        <FeatureCard>
-          <Emoji>📍</Emoji>
-          <h3>Optimized Routes</h3>
-          <p>Uses Google Maps API to find the best possible routes for drivers.</p>
-        </FeatureCard>
-
-        <FeatureCard>
-          <Emoji>📥</Emoji>
-          <h3>Drag & Drop Adjustments</h3>
-          <p>Club leaders can fine-tune assignments with an interactive interface.</p>
-        </FeatureCard>
-
-        <FeatureCard>
-          <Emoji>🔄</Emoji>
-          <h3>Live Updates</h3>
-          <p>Easily make changes without having to start over.</p>
-        </FeatureCard>
-      </FeatureSection>
 
       <HowItWorks>
         <h2>How It Works</h2>
@@ -46,29 +20,60 @@ const About = () => {
             <StepNumber>1</StepNumber>
             <StepContent>
               <h3>Create a Plan</h3>
-              <p>Enter event details, add drivers with their car capacities, and input passengers and addresses.</p>
+              <p>First, indicate what mode you would like to use. This can always be editted down the line.</p>
             </StepContent>
           </Step>
 
           <Step>
             <StepNumber>2</StepNumber>
             <StepContent>
-              <h3>Assign Passengers</h3>
-              <p>Automatically assign passengers based on locations and capacity, with manual adjustments available.</p>
+              <h3>Enter Plan Details</h3>
+              <p>Enter event details, add drivers with their car capacities, and input passengers and addresses.</p>
             </StepContent>
           </Step>
 
           <Step>
             <StepNumber>3</StepNumber>
             <StepContent>
-              <h3>Optimize & Finalize</h3>
-              <p>Fine-tune car assignments with drag and drop efficiency, ensure all passengers have a ride with easy visualization, and finalize your travel plan.</p>
+              <h3>Optimize to Preferences</h3>
+              <p>Drag and drop everyone! Some! or none! anyone left will be automatically placed into a car if automation is checked.</p>
+            </StepContent>
+          </Step>
+
+          <Step>
+            <StepNumber>4</StepNumber>
+            <StepContent>
+              <h3>Finalize Plan</h3>
+              <p>Click button to submit your plan, now you can click on your new plan!</p>
+            </StepContent>
+          </Step>
+
+          <Step>
+            <StepNumber>5</StepNumber>
+            <StepContent>
+              <h3> Analyze </h3>
+              <p> You can always edit and optimize to your liking. </p>
             </StepContent>
           </Step>
         </StepList>
       </HowItWorks>
 
       <CTAButton onClick={() => router.push("/create-plan")}>Get Started</CTAButton>
+
+      <FeatureSection>
+        <FeatureCard>
+          <h2>Optimized Routes</h2>
+          <p>Ensure the most efficient trip paths for every vehicle.</p>
+        </FeatureCard>
+        <FeatureCard>
+          <h2>Automated Ride Planning</h2>
+          <p>Instantly organize carpools based on locations and availability.</p>
+        </FeatureCard>
+        <FeatureCard>
+          <h2>Easy Coordination</h2>
+          <p>Quickly share trip plans with teammates and drivers.</p>
+        </FeatureCard>
+      </FeatureSection>
 
       <Footer />
     </Container>
@@ -98,46 +103,6 @@ const Description = styled.p`
   margin-left: auto;
   margin-right: auto;
   line-height: 1.5;
-`;
-
-const FeatureSection = styled.div`
-  display: flex;
-  justify-content: center;
-  flex-wrap: wrap;
-  gap: 20px;
-  margin-bottom: 50px;
-`;
-
-const FeatureCard = styled.div`
-  flex: 1 1 calc(33.33% - 20px);
-  max-width: 300px;
-  background: rgba(255, 255, 255, 0.1);
-  padding: 20px;
-  border-radius: 10px;
-  text-align: center;
-  box-shadow: 0px 4px 10px rgba(0, 0, 0, 0.2);
-  transition: transform 0.3s ease, background 0.3s ease;
-
-  &:hover {
-    transform: translateY(-5px);
-    background: rgba(255, 255, 255, 0.15);
-  }
-
-  h3 {
-    margin-bottom: 10px;
-    font-size: 1.2rem;
-  }
-
-  p {
-    font-size: 1rem;
-    opacity: 0.8;
-  }
-`;
-
-const Emoji = styled.span`
-  font-size: 1.5rem;
-  display: block;
-  margin-bottom: 10px;
 `;
 
 const HowItWorks = styled.div`
@@ -206,16 +171,49 @@ const CTAButton = styled.button`
   transition: background 0.3s ease;
   border: none;
   margin-top: 5px;
-  margin-bottom: 40px;
+  margin-bottom: 10px;
 
   &:hover {
     background: #3BA6D2;
   }
 `;
 
-const DevelopedBy = styled.p`
-  margin-top: 50px;
-  font-size: 1rem;
-  opacity: 0.8;
+const FeatureSection = styled.section`
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  flex-wrap: wrap;
+  max-width: 1000px;
+  padding: 60px 20px;
+  margin: 0 auto;
+  gap: 30px;
+
 `;
 
+const FeatureCard = styled.div`
+  background: rgba(255, 255, 255, 0.1);
+  padding: 31px;
+  border-radius: 15px;
+  width: 250px;
+  min-height: 180px;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  align-items: center;
+  text-align: center;
+  box-shadow: 0px 4px 12px rgba(0, 0, 0, 0.2);
+  transition: transform 0.3s ease, background 0.3s ease;
+
+  &:hover {
+    transform: translateY(-8px);
+    background: rgba(255, 255, 255, 0.15);
+  }
+
+  h2 {
+    margin-bottom: 10px;
+  }
+
+  p {
+    flex-grow: 1;
+  }
+`;
