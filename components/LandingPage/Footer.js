@@ -9,10 +9,6 @@ const Footer = () => {
           Developed by <Bold>Jake Silva</Bold> | CMPSC 263 Project
         </Text>
         <Text>© {new Date().getFullYear()} CMPSC 263</Text>
-        <Text>
-          <FooterLink href="#">Privacy Policy</FooterLink> |{' '}
-          <FooterLink href="#">Terms of Service</FooterLink>
-        </Text>
       </FooterContainer>
     </FooterSection>
   );
