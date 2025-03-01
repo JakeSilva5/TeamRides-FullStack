@@ -9,7 +9,6 @@ import { db } from "@/backend/Firebase";
 import { useEffect } from "react";
 import { Autocomplete } from "@react-google-maps/api";
 
-
 const CreatePlan = () => {
  const router = useRouter();
  const { id } = router.query;
@@ -309,8 +308,10 @@ useEffect(() => {
 
 
  return (
-   <Container>
-     <Title>Create a Plan</Title>
+   
+  <>
+    <Title>Create a Plan</Title>
+
      <CheckboxContainer>
        <label>
          <input
@@ -318,88 +319,95 @@ useEffect(() => {
            checked={autoAssign}
            onChange={() => setAutoAssign(!autoAssign)}
          />
-         Auto-Assign Passengers
+         Automatic Mode : Auto-Assign Passengers
        </label>
      </CheckboxContainer>
-     <Section>
+
+     <EventSection>
+     <SectionTitle>Event Details</SectionTitle>
+
+     <InputGroup>
        <Label>Event Name:</Label>
        <Input type="text" value={eventName} onChange={(e) => setEventName(e.target.value)} />
+      </InputGroup>
 
-
+      <InputGroup>
        <Label>Date:</Label>
        <Input type="date" value={date} onChange={(e) => setDate(e.target.value)} />
+      </InputGroup>
 
-
+      <InputGroup>
        <Label>Time:</Label>
        <Input type="time" value={time} onChange={(e) => setTime(e.target.value)} />
+      </InputGroup>
 
-
+      <InputGroup>
        <Label>Destination:</Label>
-       <Autocomplete onLoad={(ref) => (destinationAutocompleteRef.current = ref)} onPlaceChanged={handleDestinationSelect}>
+       <AutocompleteWrapper>
+        <Autocomplete onLoad={(ref) => (destinationAutocompleteRef.current = ref)} onPlaceChanged={handleDestinationSelect}>
           <Input type="text" value={destination} onChange={handleDestinationChange} placeholder="Enter destination" />
         </Autocomplete>
+      </AutocompleteWrapper>
         {isDestinationValid === true && <ValidMessage>✅ Valid Address</ValidMessage>}
         {isDestinationValid === false && <ErrorMessage>❌ Invalid Address</ErrorMessage>}
-     </Section>
+     </InputGroup>
+     </EventSection>
 
-
-     <h2>Add Driver</h2>
-     <Section>
-       <Input
-         type="text"
-         placeholder="Driver Name"
-         value={driverName}
-         onChange={(e) => setDriverName(e.target.value)}
-       />
+     <DriverPassengerSection>
+     <SectionTitle>Add Driver</SectionTitle>
+     <InputGroup>
+      <Label>Driver Name:</Label>
+      <Input type="text" value={driverName} onChange={(e) => setDriverName(e.target.value)} />
+      </InputGroup>
       
-       <Input
-         type="number"
-         placeholder="Car Capacity"
-         value={carCapacity}
-         onChange={(e) => setCarCapacity(e.target.value)}
-       />
+    <InputGroup>
+      <Label>Car Capacity:</Label>
+      <Input type="number" value={carCapacity} onChange={(e) => setCarCapacity(e.target.value)} />
+    </InputGroup>
 
+    <InputGroup>
+      <Label>Car Name (Optional):</Label>
+      <Input type="text" value={carName} onChange={(e) => setCarName(e.target.value)} />
+    </InputGroup>
 
-       <Input
-         type="text"
-         placeholder="Car Name (Optional)"
-         value={carName}
-         onChange={(e) => setCarName(e.target.value)}
-       />
-
-
+    <InputGroup>
       <Label>Starting Address:</Label>
+      <AutocompleteWrapper>
         <Autocomplete onLoad={(ref) => (driverAutocompleteRef.current = ref)} onPlaceChanged={handleDriverAddressSelect}>
           <Input type="text" value={driverAddress} onChange={(e) => setDriverAddress(e.target.value)} placeholder="Enter driver’s address" />
         </Autocomplete>
+      </AutocompleteWrapper>
         {isDriverAddressValid === true && <ValidMessage>✅ Valid Address</ValidMessage>}
         {isDriverAddressValid === false && <ErrorMessage>❌ Invalid Address</ErrorMessage>}
+    </InputGroup>
+    <StyledButton onClick={addDriver}>Add Driver</StyledButton>
+    
 
-        <Button onClick={addDriver}>Add Driver</Button>
-     </Section>
-
-     <h2>Add Passenger</h2>
-     <Section>
-       <Input
-         type="text"
-         placeholder="Passenger Name"
-         value={passengerName}
-         onChange={(e) => setPassengerName(e.target.value)}
-       />
+    <SectionTitle>Add Passenger</SectionTitle>
+    <InputGroup>
+      <Label>Passenger Name:</Label>
+      <Input type="text" value={passengerName} onChange={(e) => setPassengerName(e.target.value)} />
+    </InputGroup>
       
+    <InputGroup>
       <Label>Passenger Address:</Label>
+      <AutocompleteWrapper>
         <Autocomplete onLoad={(ref) => (passengerAutocompleteRef.current = ref)} onPlaceChanged={handlePassengerAddressSelect}>
           <Input type="text" value={passengerAddress} onChange={(e) => setPassengerAddress(e.target.value)} placeholder="Enter passenger’s address" />
         </Autocomplete>
+      </AutocompleteWrapper>
         {isPassengerAddressValid === true && <ValidMessage>✅ Valid Address</ValidMessage>}
         {isPassengerAddressValid === false && <ErrorMessage>❌ Invalid Address</ErrorMessage>}
+    </InputGroup>
 
-        <Button onClick={addPassenger}>Add Passenger</Button>
-     </Section>
+    <StyledButton onClick={addPassenger}>Add Passenger</StyledButton>
+    </DriverPassengerSection>
 
-
+    <DragDropSection>
+    <SectionTitle>Manual Adjustments</SectionTitle>
+    <OptionalLabel>(optional)</OptionalLabel>
      <DragDropContext onDragEnd={onDragEnd}>
-       <DragDropSection>
+      <DragDropColumns>
          {drivers.map(driver => (
            <Droppable key={driver.id} droppableId={driver.id}>
              {(provided) => (
@@ -419,8 +427,6 @@ useEffect(() => {
              )}
            </Droppable>
          ))}
-
-
          <Droppable droppableId="unassigned">
            {(provided) => (
              <CarBox ref={provided.innerRef} {...provided.droppableProps}>
@@ -438,31 +444,72 @@ useEffect(() => {
              </CarBox>
            )}
          </Droppable>
-       </DragDropSection>
+        </DragDropColumns>
      </DragDropContext>
-
-
-     <Button onClick={finalizePlan} disabled={isOptimizing}>
+     </DragDropSection>
+     <FinalizeButtonContainer>
+     <StyledButton onClick={finalizePlan} disabled={isOptimizing}>
        {isOptimizing ? "Optimizing Assignments..." : "Finalize Plan"}
-     </Button>
-   </Container>
+      </StyledButton>
+    </FinalizeButtonContainer>
+  </>
  );
 };
 
-
 export default CreatePlan;
-
 
 const ValidMessage = styled.p`color: green;`;
 const ErrorMessage = styled.p`color: red;`;
 
 
-const DragDropSection = styled.div`
- display: flex;
- justify-content: space-around;
- margin-top: 20px;
+const EventSection = styled.div`
+  background: rgba(255, 255, 255, 0.1);
+  padding: 30px;
+  border-radius: 15px;
+  width: 60%;
+  max-width: 800px;
+  margin: 20px auto;
+  text-align: center;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
 `;
 
+
+const DriverPassengerSection = styled.div`
+  background: rgba(255, 255, 255, 0.1);
+  padding: 30px;
+  border-radius: 15px;
+  width: 60%;
+  max-width: 800px;
+  margin: 20px auto;
+  text-align: center;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+`;
+
+
+const DragDropSection = styled.div`
+  background: rgba(255, 255, 255, 0.1);
+  padding: 30px;
+  border-radius: 15px;
+  width: 60%;
+  max-width: 800px;
+  margin: 20px auto;
+  text-align: center;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+`;
+
+const DragDropColumns = styled.div`
+  display: flex;
+  justify-content: space-around;
+  gap: 20px;
+  flex-wrap: wrap;
+  margin-top: 20px;
+`;
 
 const PassengerItem = styled.div`
  padding: 10px;
@@ -473,142 +520,109 @@ const PassengerItem = styled.div`
  text-align: center;
 `;
 
-
 const CarBox = styled.div`
- background: rgba(76, 201, 240, 0.2);
- padding: 15px;
- border-radius: 8px;
- margin-top: 10px;
- min-height: ${({ maxCapacity }) => maxCapacity * 40}px;
+  background: rgba(76, 201, 240, 0.2);
+  padding: 15px;
+  border-radius: 8px;
+  min-width: 250px;
+  max-width: 300px;
+  min-height: ${({ maxCapacity }) => maxCapacity * 40}px;
+  text-align: center;
+  box-shadow: 0px 4px 10px rgba(0, 0, 0, 0.2);
 `;
-
-
-
 
 const Title = styled.h1`
-font-size: 2.5rem;
-font-weight: bold;
-margin-bottom: 20px;
+  font-size: 2.5rem;
+  font-weight: bold;
+  text-align: center;
+  margin-top: 12px;
+  margin-bottom: 20px;
+  width: 100%;
+
 `;
 
-
-
-
-const Container = styled.div`
-width: 60%;
-margin: auto;
-padding: 20px;
-text-align: center;
+const FinalizeButtonContainer = styled.div`
+  text-align: center;
+  margin-top: 20px;
 `;
-
-
-
-
-const Section = styled.div`
-margin-bottom: 20px;
-`;
-
-
-
 
 const Label = styled.label`
-display: block;
-margin-bottom: 5px;
-font-weight: bold;
+  font-size: 1.1rem;
+  color: white;
+  margin-bottom: 5px;
+  font-weight: bold;
+  width: 100%;
+  text-align: center;
 `;
-
-
-
 
 const Input = styled.input`
-width: 100%;
-padding: 8px;
-margin-top: 5px;
-margin-bottom: 10px;
-border: 1px solid #ccc;
-border-radius: 5px;
+  width: 100%;
+  max-width: 500px;
+  padding: 10px;
+  margin-top: 5px;
+  border: 1px solid #ccc;
+  border-radius: 8px;
+  font-size: 1rem;
 `;
 
-
-
-
-const Button = styled.button`
-background: ${(props) => (props.disabled ? "#ccc" : "#4CC9F0")};
-color: white;
-padding: 10px 15px;
-border: none;
-border-radius: 5px;
-cursor: ${(props) => (props.disabled ? "not-allowed" : "pointer")};
-transition: background 0.3s ease;
-
-
-&:hover {
- background: ${(props) => (props.disabled ? "#ccc" : "#3BA6D2")};
-}
+const InputGroup = styled.div`
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 5px;
+  margin-bottom: 20px;
+  width: 100%;
+  max-width: 500px;
+  text-align: center; 
 `;
 
-
-
-
-const List = styled.ul`
-list-style-type: none;
-padding: 0;
+const AutocompleteWrapper = styled.div`
+  width: 100%;
+  max-width: 500px;
 `;
 
+const StyledButton = styled.button`
+  width: 250px;
+  background: #4CC9F0;
+  color: white;
+  padding: 12px;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  font-size: 1rem;
+  transition: 0.3s;
+  text-align: center;
+  margin-top: 15px; 
+  margin-bottom: 40px; 
 
-
-
-const ListItem = styled.li`
-display: flex;
-justify-content: space-between;
-align-items: center;
-background: rgba(255, 255, 255, 0.1);
-padding: 10px;
-border-radius: 5px;
-margin-bottom: 5px;
+  &:hover {
+    background: #3BA6D2;
+  }
 `;
 
-
-
-
-const RemoveButton = styled.button`
-background: red;
-color: white;
-padding: 5px 10px;
-border: none;
-border-radius: 5px;
-cursor: pointer;
-transition: background 0.3s;
-
-
-
-
-&:hover {
-  background: darkred;
-}
+const SectionTitle = styled.h2`
+  font-size: 1.8rem;
+  color: white;
+  margin-bottom: 15px;
+  text-align: center;
+  border-bottom: 2px solid rgba(255, 255, 255, 0.3);
+  padding-bottom: 8px;
+  width: 80%;
 `;
-
-
-
-
-const ReviewSection = styled.div`
-background: rgba(255, 255, 255, 0.15);
-padding: 15px;
-border-radius: 10px;
-margin: 20px 0;
-text-align: center;
-`;
-
-
-const EmptyMessage = styled.p`
-color: #aaa;
-font-style: italic;
-margin-top: 10px;
-`;
-
 
 const CheckboxContainer = styled.div`
- margin-bottom: 20px;
- font-size: 1rem;
+  background: rgba(255, 255, 255, 0.1);
+  padding: 10px;
+  border-radius: 8px;
+  width: 40%;
+  margin: 20px auto;
+  text-align: center;
 `;
 
+const OptionalLabel = styled.p`
+  font-size: 0.9rem;
+  color: rgba(255, 255, 255, 0.5); /* Light gray */
+  font-style: italic;
+  margin-top: -5px;
+  text-align: center;
+`;
