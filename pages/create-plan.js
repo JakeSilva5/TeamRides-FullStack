@@ -328,7 +328,7 @@ useEffect(() => {
 
      <InputGroup>
        <Label>Event Name:</Label>
-       <Input type="text" value={eventName} onChange={(e) => setEventName(e.target.value)} />
+       <Input type="text" value={eventName} onChange={(e) => setEventName(e.target.value)}placeholder="Enter event name" />
       </InputGroup>
 
       <InputGroup>
@@ -345,7 +345,7 @@ useEffect(() => {
        <Label>Destination:</Label>
        <AutocompleteWrapper>
         <Autocomplete onLoad={(ref) => (destinationAutocompleteRef.current = ref)} onPlaceChanged={handleDestinationSelect}>
-          <Input type="text" value={destination} onChange={handleDestinationChange} placeholder="Enter destination" />
+          <Input type="text" value={destination} onChange={handleDestinationChange} placeholder="Enter destination address" />
         </Autocomplete>
       </AutocompleteWrapper>
         {isDestinationValid === true && <ValidMessage>✅ Valid Address</ValidMessage>}
@@ -357,17 +357,17 @@ useEffect(() => {
      <SectionTitle>Add Driver</SectionTitle>
      <InputGroup>
       <Label>Driver Name:</Label>
-      <Input type="text" value={driverName} onChange={(e) => setDriverName(e.target.value)} />
+      <Input type="text" value={driverName} onChange={(e) => setDriverName(e.target.value)}placeholder="Enter driver's name"/>
       </InputGroup>
       
     <InputGroup>
       <Label>Car Capacity:</Label>
-      <Input type="number" value={carCapacity} onChange={(e) => setCarCapacity(e.target.value)} />
+      <Input type="number" value={carCapacity} onChange={(e) => setCarCapacity(e.target.value)}placeholder="Enter number of passenger seats" />
     </InputGroup>
 
     <InputGroup>
       <Label>Car Name (Optional):</Label>
-      <Input type="text" value={carName} onChange={(e) => setCarName(e.target.value)} />
+      <Input type="text" value={carName} onChange={(e) => setCarName(e.target.value)} placeholder="Enter car nickname"/>
     </InputGroup>
 
     <InputGroup>
@@ -386,7 +386,7 @@ useEffect(() => {
     <SectionTitle>Add Passenger</SectionTitle>
     <InputGroup>
       <Label>Passenger Name:</Label>
-      <Input type="text" value={passengerName} onChange={(e) => setPassengerName(e.target.value)} />
+      <Input type="text" value={passengerName} onChange={(e) => setPassengerName(e.target.value)} placeholder="Enter passenger's name"/>
     </InputGroup>
       
     <InputGroup>
