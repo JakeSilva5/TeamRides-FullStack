@@ -18,13 +18,13 @@ const MyPlans = () => {
       }
   
       const plansRef = collection(db, "plans");
-      const q = query(plansRef, where("userId", "==", user.uid)); // ✅ Ensure correct filter
+      const q = query(plansRef, where("userId", "==", user.uid));
   
       try {
         const querySnapshot = await getDocs(q);
         const userPlans = querySnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
         setPlans(userPlans);
-        console.log("Fetched plans:", userPlans); // 🔍 Debugging log
+        console.log("Fetched plans:", userPlans);
       } catch (error) {
         console.error("Error fetching plans:", error);
       } finally {
