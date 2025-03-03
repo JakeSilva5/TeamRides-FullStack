@@ -39,12 +39,6 @@ const Login = () => {
           <InputTitle>Password</InputTitle>
           <Input type="password" value={password} onChange={(e) => setPassword(e.target.value)} />
 
-          <UserAgreementText>
-            By logging in, you agree to our{' '}
-            <UserAgreementSpan href="/legal/terms-of-use" target="_blank">Terms of Use</UserAgreementSpan> and{' '}
-            <UserAgreementSpan href="/legal/privacy-policy" target="_blank">Privacy Policy</UserAgreementSpan>.
-          </UserAgreementText>
-
           <MainButton onClick={handleLogin}>Login</MainButton>
         </FormWrapper>
       </Container>
@@ -113,20 +107,6 @@ const MainButton = styled.button`
 
   &:hover {
     background: #3BA6D2;
-  }
-`;
-
-const UserAgreementText = styled.p`
-  font-size: 13px;
-  color: #ccc;
-  margin-top: 12px;
-`;
-
-const UserAgreementSpan = styled(Link)`
-  color: #4CC9F0;
-  cursor: pointer;
-  &:hover {
-    text-decoration: underline;
   }
 `;
 

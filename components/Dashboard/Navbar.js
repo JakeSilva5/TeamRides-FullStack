@@ -64,21 +64,25 @@ const Nav = styled.nav`
 const LeftSection = styled.div`
   display: flex;
   align-items: center;
+  flex-shrink: 0;
 `;
 
 const RightSection = styled.div`
   display: flex;
   align-items: center;
-  gap: 30px;
+  gap: 20px;
+  flex-shrink: 0; 
+  min-width: 130px;
 `;
 
 const CenterSection = styled.div`
   display: flex;
   align-items: center;
   justify-content: center;
-  flex: 1;
+  flex-grow: 1;
   gap: 40px;
-`;
+  min-width: 300px;
+  `;
 
 const Logo = styled.div`
   font-size: 1.5rem;
