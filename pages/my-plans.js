@@ -8,18 +8,23 @@ const MyPlans = () => {
   const router = useRouter();
   const [plans, setPlans] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [isAuthenticated, setIsAuthenticated] = useState(false);
 
   useEffect(() => {
     const fetchPlans = async () => {
       const user = auth.currentUser;
+
       if (!user) {
-        console.error("User not authenticated!");
+        setIsAuthenticated(false);
+        setLoading(false);
         return;
       }
-  
+
+      setIsAuthenticated(true); 
+
       const plansRef = collection(db, "plans");
       const q = query(plansRef, where("userId", "==", user.uid));
-  
+
       try {
         const querySnapshot = await getDocs(q);
         const userPlans = querySnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
@@ -31,10 +36,9 @@ const MyPlans = () => {
         setLoading(false);
       }
     };
-  
+
     fetchPlans();
   }, []);
-  
 
   const handleDelete = async (planId) => {
     if (!window.confirm("Are you sure you want to delete this plan?")) return;
@@ -46,6 +50,15 @@ const MyPlans = () => {
       console.error("Error deleting plan:", error);
     }
   };
+
+  if (!isAuthenticated) {
+    return (
+      <Container>
+        <Title>My Plans</Title>
+        <EmptyMessage>You need to log in to view your plans.</EmptyMessage>
+      </Container>
+    );
+  }
 
   if (loading) return <p>Loading plans...</p>;
 
@@ -94,6 +107,7 @@ const PlanCard = styled.div`
   border-radius: 10px;
   margin-bottom: 20px;
   text-align: left;
+  box-shadow: 0px 4px 6px rgba(0, 0, 0, 0.1);
 `;
 
 const ButtonContainer = styled.div`
@@ -102,32 +116,47 @@ const ButtonContainer = styled.div`
   margin-top: 10px;
 `;
 
-const ViewButton = styled.button`
+const Button = styled.button`
+  padding: 8px 12px;
+  border-radius: 5px;
+  cursor: pointer;
+  transition: background 0.3s ease;
+
+  &:hover {
+    filter: brightness(1.1);
+  }
+`;
+
+const ViewButton = styled(Button)`
   background: #4CC9F0;
   color: white;
-  padding: 8px 12px;
-  border-radius: 5px;
-  cursor: pointer;
+
+  &:hover {
+    background: #3BA6D2;
+  }
 `;
 
-const EditButton = styled.button`
+const EditButton = styled(Button)`
   background: #FDCB58;
   color: black;
-  padding: 8px 12px;
-  border-radius: 5px;
-  cursor: pointer;
+
+  &:hover {
+    background: #E6B453;
+  }
 `;
 
-const DeleteButton = styled.button`
+const DeleteButton = styled(Button)`
   background: #E74C3C;
   color: white;
-  padding: 8px 12px;
-  border-radius: 5px;
-  cursor: pointer;
+
+  &:hover {
+    background: #C0392B;
+  }
 `;
 
 const EmptyMessage = styled.p`
   color: #aaa;
   font-style: italic;
   margin-top: 10px;
+  font-size: 1.2rem;
 `;
