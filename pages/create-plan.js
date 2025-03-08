@@ -274,37 +274,65 @@ useEffect(() => {
 
 
   const canAddToCar = (driver, passengers) => driver.passengers.length + passengers.length <= driver.capacity;
- // drag and drop logic
- const onDragEnd = (result) => {
-   const { destination, source, draggableId } = result;
-   if (!destination) return;
-   if (destination.droppableId === source.droppableId && destination.index === source.index) return;
-
-
-   const start = source.droppableId === "unassigned" ? unassignedPassengers : drivers.find(driver => driver.id === source.droppableId).passengers;
-   const finish = destination.droppableId === "unassigned" ? unassignedPassengers : drivers.find(driver => driver.id === destination.droppableId).passengers;
-
-
-   const movedPassenger = start.find(passenger => passenger.id === draggableId);
-   if (destination.droppableId !== "unassigned") {
-     const targetDriver = drivers.find(driver => driver.id === destination.droppableId);
-     if (!canAddToCar(targetDriver, [movedPassenger])) return;
-   }
-
-
-   const startPassengers = [...start];
-   startPassengers.splice(source.index, 1);
-   const finishPassengers = [...finish];
-   finishPassengers.splice(destination.index, 0, movedPassenger);
-
-
-   if (source.droppableId === "unassigned") setUnassignedPassengers(startPassengers);
-   else setDrivers(drivers.map(driver => driver.id === source.droppableId ? { ...driver, passengers: startPassengers } : driver));
-
-
-   if (destination.droppableId === "unassigned") setUnassignedPassengers(finishPassengers);
-   else setDrivers(drivers.map(driver => driver.id === destination.droppableId ? { ...driver, passengers: finishPassengers } : driver));
- };
+ 
+  // drag and drop logic
+  const onDragEnd = (result) => {
+    const { source, destination, draggableId } = result;
+    if (!destination) return; // Do nothing if dropped outside
+  
+    const sourceDriver = source.droppableId === "unassigned"
+      ? null
+      : drivers.find(driver => driver.id === source.droppableId);
+    const destinationDriver = destination.droppableId === "unassigned"
+      ? null
+      : drivers.find(driver => driver.id === destination.droppableId);
+  
+    let updatedDrivers = [...drivers];
+    let updatedUnassigned = [...unassignedPassengers];
+  
+    // Find the passenger being moved
+    let movedPassenger = sourceDriver
+      ? sourceDriver.passengers.find(p => p.id === draggableId)
+      : unassignedPassengers.find(p => p.id === draggableId);
+  
+    if (!movedPassenger) return; // Safety check
+  
+    // Remove passenger from original list
+    if (source.droppableId === "unassigned") {
+      updatedUnassigned = updatedUnassigned.filter(p => p.id !== draggableId);
+    } else {
+      updatedDrivers = updatedDrivers.map(driver =>
+        driver.id === source.droppableId
+          ? { ...driver, passengers: driver.passengers.filter(p => p.id !== draggableId) }
+          : driver
+      );
+    }
+  
+    // **Ensure the car has space before adding the passenger**
+    if (destination.droppableId !== "unassigned") {
+      const targetDriver = updatedDrivers.find(driver => driver.id === destination.droppableId);
+      if (targetDriver && targetDriver.passengers.length >= targetDriver.capacity) {
+        console.warn("Car is full! Cannot add more passengers.");
+        return;
+      }
+    }
+  
+    // Add passenger to new list
+    if (destination.droppableId === "unassigned") {
+      updatedUnassigned.splice(destination.index, 0, movedPassenger);
+    } else {
+      updatedDrivers = updatedDrivers.map(driver =>
+        driver.id === destination.droppableId
+          ? { ...driver, passengers: [...driver.passengers.slice(0, destination.index), movedPassenger, ...driver.passengers.slice(destination.index)] }
+          : driver
+      );
+    }
+  
+    // Update state
+    setDrivers(updatedDrivers);
+    setUnassignedPassengers(updatedUnassigned);
+  };
+  
 
 
  return (
